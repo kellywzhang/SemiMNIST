@@ -1,0 +1,6 @@
+The documentation is supposed to contain:
+- how to run the code
+- which ground do you test your code
+- some basic tuning parameter procedure, such as where to modify num_layers and so on
+- the performance you end up getting with the procedure
+- some explanation of the approaches would be preferred

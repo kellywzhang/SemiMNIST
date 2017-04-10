@@ -1,0 +1,28 @@
+# Example Model Parameter Text
+
+# All empty lines and lines beginning with # will be ignored (comments)
+# Each line should contain:
+#      layer-type, filter-count, kernel-size, batch-norm-bool, activation
+
+# layer-type:
+#      convv (convolution valid padding i.e. no-padding)
+#      convf (convolution full padding i.e. padding of one less than kernel-size)
+#      maxpool
+# filter-count: number of filters you wish to train for a particular layer
+# kernel-size: size of kernel for applying convolutions
+# batch-norm-bool: boolean for whether you would like a batch-normalization to be performed after applying that layer
+# activation: activation function to use
+#      relu
+#      lrelu (leaky-relu with 0.1 leak)
+
+# Only three types layers and two types of activations are currently supported,
+# one can easily add more in model.py parse_layers function though
+
+# Example model definition:
+
+convv, 32, 5, False, None
+maxpool, 0, 2, True, lrelu
+convv, 64, 3, True, lrelu
+convv, 64, 3, False, None
+maxpool, 0, 2, True, lrelu
+convv, 128, 3, True, lrelu

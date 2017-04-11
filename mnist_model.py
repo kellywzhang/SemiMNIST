@@ -11,19 +11,6 @@ from utils import to_gpu, parse_layers_from_file, augment
 
 import model
 
-"""
-TODO
-- fix learning rate decay
-- noise argument
-- semi vs supervised loss weight
-- model description / explaination
-- better way to log model stats?
-
-- test everything and record
-- different semi/ non semi batch sizes
-"""
-
-
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',

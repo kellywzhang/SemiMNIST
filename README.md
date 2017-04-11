@@ -40,11 +40,11 @@ Optional Arguments
   --test-batch-size : batch size for evaluation (default 1000)  
   --semi : enables use of unlabeled data for semi-supervised learning (default True)  
   --semi-weight : weight put on semi-supervised reconstruction loss (default 1)  
-  --augment : boolean for whether to utilize data augmentation (translations and rotations)  
+  --augment : boolean for whether to utilize data augmentation (translations and rotations) 
               for supervised training (default True)  
-  --noise : comma delimited standard deviations of gaussian noise to apply before each layer  
-            (default "0.3,0,0.3,0.3,0,0.3,0.3"). Note, there is one stddev than there are  
-            layers defined in param-file b/c noise can be appied to image (before first layer)  
+  --noise : comma delimited standard deviations of gaussian noise to apply before each layer 
+            (default "0.3,0,0.3,0.3,0,0.3,0.3"). Note, there is one stddev than there are 
+            layers defined in param-file b/c noise can be appied to image (before first layer) 
             and after the last layer, before the fully connected layers  
   --epochs : number of epochs to train for (default 500)  
   --lr : learning rate (default 0.001)  

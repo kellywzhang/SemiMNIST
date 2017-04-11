@@ -32,7 +32,7 @@ parser.add_argument('--semi-batch-size', type=int, default=50, metavar='N',
                     help='input batch size for semi-supervied training (default: 50)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
-parser.add_argument('--semi', type=bool, default=True,
+parser.add_argument('--supervised', action='store_true',
                     help='enables use of unlabeled data for semi-supervised learning (default True)')
 parser.add_argument('--semi-weight', type=float, default=1.0,
                     help='weight to put on semi-supervised reconstruction loss')
@@ -61,6 +61,7 @@ parser.add_argument('--save', type=str, default="model.pt",
                     help='file to read model parameters from')
 
 args = parser.parse_args()
+print(args)
 
 torch.manual_seed(args.seed)
 if args.cuda:
@@ -90,7 +91,6 @@ print("Data loaded!")
 layers = parse_layers_from_file(args.param_file)
 
 noise = [float(x) for x in args.noise.split(",")]
-#[0.3, 0, 0.3, 0.3, 0, 0.3, 0.3]
 model = model.ConvNet(layers, noise)
 
 if args.cuda:
@@ -123,14 +123,12 @@ def validation(epoch):
 def train(epoch):
     model.train()
     correct = 0
-    for batch_idx, (labeled, unlabeled) in enumerate(zip(train_loader, train_unlabeled_loader)):
+    for batch_idx, labeled in enumerate(train_loader):
         data, target = labeled
-        data_unlabeled, _ = unlabeled
         if args.augment:
             data = augment(data) # augment labeled data
 
         data, target = to_gpu(Variable(data), args.cuda), to_gpu(Variable(target), args.cuda)
-        data_unlabeled = to_gpu(Variable(data_unlabeled), args.cuda)
 
         optimizer.zero_grad()
 
@@ -199,14 +197,14 @@ def train_semi(epoch):
 
 best_validation_loss = None
 run_stats = []
-lr_count = 1
+
 # training loop
 for epoch in range(1, args.epochs + 1):
-    if args.semi:
-        training_loss = train_semi(epoch)
-    else:
+    if args.supervised:
         training_loss = train(epoch)
-        # optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*args.decay
+    else:
+        training_loss = train_semi(epoch)
+
     validation_loss, validation_accuracy = validation(epoch)
 
     # save model and model statistics
@@ -222,13 +220,3 @@ for epoch in range(1, args.epochs + 1):
         optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']/2
     if epoch > 200:
         optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*0.99
-
-    # if epoch > 100:
-    #     if lr_count % args.decay_interval == 0:
-    #         lr_count = 1
-    #         optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*args.decay
-    #         print("Decreasing learning rate: ", optimizer.param_groups[0]['lr'])
-    #     else:
-    #         lr_count += 1
-    # if epoch > 200:
-    #     optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*0.99

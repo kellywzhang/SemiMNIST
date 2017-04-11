@@ -28,6 +28,8 @@ values that we add, and then backpropagate the error.
 Requirements
 ============
 Our model requires PyTorch 0.1.10 and scipy 0.19.0.
+The pickle data files are not included in this repository as they are too large
+(see https://inclass.kaggle.com/c/mnist-digit-recognition-assignment-1/data).
 
 How to Run / Alter Code
 =======================
@@ -56,3 +58,4 @@ The details for how to specify model structure are defined in model_param.txt.
 
 Performance
 ===========
+Training on default parameters on cuda yields a maximum validation accuracy of 99.41%.

@@ -1,9 +1,11 @@
 import torch
 import random
-import random
 import scipy.ndimage
 import numpy as np
 from torch.autograd import Variable
+
+random.seed(1)
+np.random.seed(1)
 
 def to_gpu(var, cuda):
     if cuda:

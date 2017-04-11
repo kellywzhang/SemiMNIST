@@ -5,6 +5,8 @@ from torch.autograd import Variable
 
 from utils import to_gpu
 
+torch.manual_seed(1)
+
 class ConvNet(nn.Module):
     def __init__(self, layers, noise):
         super(ConvNet, self).__init__()

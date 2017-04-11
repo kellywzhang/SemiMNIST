@@ -27,33 +27,39 @@ TODO
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
 parser.add_argument('--batch-size', type=int, default=50, metavar='N',
-                    help='input batch size for training (default: 64)')
+                    help='input batch size for training (default: 50)')
 parser.add_argument('--semi-batch-size', type=int, default=50, metavar='N',
-                    help='input batch size for semi-supervied training (default: 64)')
+                    help='input batch size for semi-supervied training (default: 50)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                     help='input batch size for testing (default: 1000)')
 parser.add_argument('--semi', type=bool, default=True,
-                    help='enables use of unlabeled data for semi-supervised learning')
+                    help='enables use of unlabeled data for semi-supervised learning (default True)')
+parser.add_argument('--semi-weight', type=float, default=1.0,
+                    help='weight to put on semi-supervised reconstruction loss')
 parser.add_argument('--augment', type=bool, default=True,
                     help='augments labeled data (default: True)')
+parser.add_argument('--noise', type=str, default="0.3,0,0.3,0.3,0,0.3,0.3",
+                    help="standard deviation of gaussian noise to apply before each layer \
+                    Note, there is one stddev than there are layers defined in param-file \
+                    b/c noise can be appied to image (before first layer) and after the last layer,\
+                    before the fully connected layers")
 parser.add_argument('--epochs', type=int, default=500, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
-                    help='learning rate (default: 0.01)')
-parser.add_argument('--decay', type=float, default=0.001, metavar='LR',
+                    help='learning rate (default: 0.001)')
+parser.add_argument('--decay', type=float, default=0.8, metavar='LR',
                     help='learning rate decay factor (< 1)')
-parser.add_argument('--momentum', type=float, default=0.5, metavar='M',
-                    help='SGD momentum (default: 0.5)')
+parser.add_argument('--decay_interval', type=int, default=50,
+                    help='learning rate decay interval')
 parser.add_argument('--cuda', action='store_true',
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
-                    help='how many batches to wait before logging training status')
 parser.add_argument('--param-file', type=str, default="model_param.txt",
                     help='file to read model parameters from')
 parser.add_argument('--save', type=str, default="model.pt",
                     help='file to read model parameters from')
+
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
@@ -83,7 +89,8 @@ print("Data loaded!")
 
 layers = parse_layers_from_file(args.param_file)
 
-noise = [0.3, 0, 0.3, 0.3, 0, 0.3, 0.3]
+noise = [float(x) for x in args.noise.split(",")]
+#[0.3, 0, 0.3, 0.3, 0, 0.3, 0.3]
 model = model.ConvNet(layers, noise)
 
 if args.cuda:
@@ -173,7 +180,7 @@ def train_semi(epoch):
         loss = F.cross_entropy(outputs, target)
         # unsupervised / reconstruction loss
         unlabeled_loss = mse(outputs_corrupted, Variable(outputs_clean.data))
-        loss += 1*unlabeled_loss
+        loss += args.semi_weight*unlabeled_loss
 
         loss.backward()
         optimizer.step()
@@ -192,12 +199,14 @@ def train_semi(epoch):
 
 best_validation_loss = None
 run_stats = []
+lr_count = 1
 # training loop
 for epoch in range(1, args.epochs + 1):
     if args.semi:
         training_loss = train_semi(epoch)
     else:
         training_loss = train(epoch)
+        # optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*args.decay
     validation_loss, validation_accuracy = validation(epoch)
 
     # save model and model statistics
@@ -209,12 +218,17 @@ for epoch in range(1, args.epochs + 1):
     pickle.dump(run_stats, open("model_stats.p", "wb"))
 
     # learning rate decay
-    # if epoch == 100:
-    #     optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']/2
-    # if epoch > 200:
-    #     optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*0.99
-
     if epoch == 100:
-        optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*args.decay
+        optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']/2
     if epoch > 200:
         optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*0.99
+
+    # if epoch > 100:
+    #     if lr_count % args.decay_interval == 0:
+    #         lr_count = 1
+    #         optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*args.decay
+    #         print("Decreasing learning rate: ", optimizer.param_groups[0]['lr'])
+    #     else:
+    #         lr_count += 1
+    # if epoch > 200:
+    #     optimizer.param_groups[0]['lr'] = optimizer.param_groups[0]['lr']*0.99

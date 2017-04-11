@@ -4,3 +4,7 @@ __pycache__/*
 data/*
 *.pyc
 *.pt
+mnist_result.py
+test.py
+gamma-final
+gamma-final.csv
